@@ -6,7 +6,7 @@ import numpy as np
 
 app = Flask(__name__)
 
-# Heart-predit
+# Heart-and-kidney-predit
 
 @app.route("/")
 def ValuePredictorHeart(to_predict_list, size):
@@ -16,10 +16,37 @@ def ValuePredictorHeart(to_predict_list, size):
         result = loaded_model.predict(to_predict)
     return result[0]
 
+def ValuePredictorKidney(to_predict_list, size):
+    to_predict = np.array(to_predict_list).reshape(1,size)
+    if(size==7):
+        loaded_model = joblib.load(r'.\artifacts\kidney_model.pkl')
+        result = loaded_model.predict(to_predict)
+    return result[0]
+
+@app.route('/predict_kidney', methods = ["POST"])
+def predict_kidney():
+    bp = float(request.form['bp']) 
+    sg = float(request.form['sg'])
+    al = float(request.form['al'])
+    su = float(request.form['su'])
+    rbc = float(request.form['rbc'])
+    pc = float(request.form['pc'])
+    pcc = float(request.form['pcc']) 
+    if request.method == "POST":
+        to_predict_list = [bp,sg,al,su,rbc,pc,pcc]
+        print(to_predict_list)
+        if(len(to_predict_list)==7):
+            result = ValuePredictorKidney(to_predict_list,7)
+    
+    if(int(result)==1):
+        prediction = "Sorry you have chance of getting the disease. Please consult the doctor immediately"
+    else:
+        prediction = "No need to fear. You have no dangerous symptoms of the disease"
+    res = str(result)
+    return{'result':prediction, 'val': res}    
 
 @app.route('/predict_heart', methods = ["POST"])
-
-def predict():  
+def predict_heart():  
     cp = request.form['cp']
     trestbps = request.form['trestbps']
     chol = request.form['chol']
@@ -29,7 +56,6 @@ def predict():
     exang = request.form['exang'] 
     
     if request.method == "POST":
-        
         to_predict_list = [cp,trestbps,chol,fbs,restecg,thalach,exang]
         if(len(to_predict_list)==7):
             result = ValuePredictorHeart(to_predict_list,7)
@@ -41,10 +67,12 @@ def predict():
     res = str(result)
     return{'result':prediction, 'val': res}
 
+
+
 #triage
 
 @app.route('/predict', methods=['POST'])
-def predict_home_KTAS():
+def predict_triage():
     New_Saturation =  request.form['Saturation']
     Sexm = int(request.form['Sexm'])
     Injuryy = int(request.form['Injuryy'])
